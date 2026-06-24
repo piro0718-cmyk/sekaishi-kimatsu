@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>世界史 全体の流れ</title>
+<style>
+  :root{
+    --bg: #f6f1e7;
+    --ink: #2b2420;
+    --accent: #8a5a3b;
+    --accent-soft: #e8d9c4;
+    --card: #fffdf9;
+    --line: #d8c9b3;
+    --correct: #4f7a52;
+    --correct-bg: #e6efe2;
+    --wrong: #a14b3f;
+    --wrong-bg: #f3e2df;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding: 18px 16px 32px;
+  }
+  header{
+    text-align:center;
+    margin-bottom: 14px;
+  }
+  header h1{
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+    font-weight: 700;
+  }
+  header p{
+    margin:0;
+    font-size: 0.72rem;
+    color: #7a6e60;
+    letter-spacing: 0.05em;
+  }
+  .progress-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin: 14px 0 18px;
+  }
+  .progress-bar{
+    flex:1;
+    height:6px;
+    background: var(--accent-soft);
+    border-radius: 4px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background: var(--accent);
+    width:0%;
+    transition: width .25s ease;
+  }
+  .progress-text{
+    font-size: 0.75rem;
+    color:#7a6e60;
+    white-space:nowrap;
+    min-width: 52px;
+    text-align:right;
+  }
+  .tag-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom: 10px;
+  }
+  .section-tag{
+    display:inline-block;
+    font-size: 0.68rem;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    padding: 2px 10px;
+    letter-spacing: 0.05em;
+  }
+  .type-tag{
+    display:inline-block;
+    font-size: 0.65rem;
+    color: #8a7a63;
+    background: var(--accent-soft);
+    border-radius: 100px;
+    padding: 2px 10px;
+    letter-spacing: 0.05em;
+  }
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 10px rgba(60,45,25,0.06);
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  .q-number{
+    font-size: 0.7rem;
+    color:#a3917a;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .q-text{
+    font-size: 1.05rem;
+    line-height: 1.75;
+    margin: 0 0 18px;
+    white-space: pre-wrap;
+  }
+  /* 自由記述用 */
+  .answer-box{
+    background: var(--correct-bg);
+    border-left: 3px solid var(--correct);
+    border-radius: 6px;
+    padding: 14px 14px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #2f4530;
+    margin-bottom: 18px;
+    display:none;
+    white-space: pre-wrap;
+  }
+  .answer-box.show{ display:block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;} }
+
+  /* 4択用 */
+  .choice-list{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .choice-btn{
+    font-family: inherit;
+    text-align:left;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--ink);
+    cursor:pointer;
+    transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  }
+  .choice-btn:active{ transform: scale(0.98); }
+  .choice-btn.correct{
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: #2f4530;
+    font-weight:bold;
+  }
+  .choice-btn.wrong{
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: #6e2e25;
+  }
+  .choice-btn[disabled]{ cursor:default; }
+  .result-note{
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+    min-height: 1.2em;
+    font-weight:bold;
+  }
+  .result-note.correct{ color: var(--correct); }
+  .result-note.wrong{ color: var(--wrong); }
+
+  .spacer{flex:1;}
+
+  .btn-row{
+    display:flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  button{
+    font-family: inherit;
+    border:none;
+    border-radius: 10px;
+    padding: 14px 0;
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+    cursor:pointer;
+    flex:1;
+    transition: transform .08s ease, opacity .15s ease;
+  }
+  button:active{ transform: scale(0.97); }
+  .btn-reveal{
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-next{
+    background: var(--ink);
+    color: #fff;
+  }
+  .btn-next[disabled]{
+    opacity: 0.35;
+  }
+  .btn-prev{
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    flex: 0 0 84px;
+  }
+  .nav-row{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+  }
+  .done-screen{
+    text-align:center;
+    padding: 60px 10px;
+  }
+  .done-screen h2{
+    font-size:1.2rem;
+    margin-bottom: 10px;
+  }
+  .done-screen p{
+    color:#7a6e60;
+    font-size:0.85rem;
+    margin-bottom: 24px;
+  }
+  .restart-btn{
+    background: var(--accent);
+    color:#fff;
+    border:none;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>世界史 全体の流れ</h1>
+    <p>ギリシャ 〜 ローマ 〜 中世 〜 イスラム 〜 十字軍 〜 ルネサンス</p>
+  </header>
+
+  <div class="progress-row">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">1 / 50</div>
+  </div>
+
+  <div id="quizArea">
+    <div class="tag-row">
+      <span class="section-tag" id="sectionTag">①ギリシャ世界</span>
+      <span class="type-tag" id="typeTag">4択</span>
+    </div>
+    <div class="card">
+      <div class="q-number" id="qNumber">Q1</div>
+      <div class="q-text" id="qText"></div>
+
+      <!-- 4択問題用 -->
+      <div id="choiceArea" style="display:none;">
+        <div class="choice-list" id="choiceList"></div>
+        <div class="result-note" id="resultNote"></div>
+      </div>
+
+      <!-- 自由記述問題用 -->
+      <div id="freeArea" style="display:none;">
+        <div class="answer-box" id="answerBox"></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="btn-row" id="freeBtnRow" style="display:none;">
+        <button class="btn-reveal" id="revealBtn">答えを見る</button>
+        <button class="btn-next" id="nextBtnFree">次へ →</button>
+      </div>
+      <div class="btn-row" id="choiceBtnRow" style="display:none;">
+        <button class="btn-next" id="nextBtnChoice" disabled>次へ →</button>
+      </div>
+      <div class="nav-row">
+        <button class="btn-prev" id="prevBtn">← 前へ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="doneArea" class="done-screen" style="display:none;">
+    <h2>おつかれさま！</h2>
+    <p>全体の流れをひと通り確認しました。<br>苦手なパートがあれば、そこだけ復習しよう。</p>
+    <button class="restart-btn" id="restartBtn">もう一度やる</button>
+  </div>
+</div>
+
+<script src="quiz_data.js"></script>
+<script>
+  // セクションの境界（0-indexed: この番号から新セクション開始）
+  const sectionMarks = [
+    {start:0, label:"①ギリシャ世界"},
+    {start:10, label:"②ローマ：共和政〜帝政成立"},
+    {start:17, label:"③ローマ帝政とキリスト教"},
+    {start:25, label:"④ゲルマン民族とフランク王国"},
+    {start:30, label:"⑤中世封建社会"},
+    {start:32, label:"⑥西欧の再編"},
+    {start:34, label:"⑦イスラム世界"},
+    {start:42, label:"⑧十字軍"},
+    {start:46, label:"⑨モンゴル帝国の襲来"},
+    {start:48, label:"⑩ルネサンス"},
+  ];
+
+  function getSectionLabel(idx){
+    let label = sectionMarks[0].label;
+    for(const m of sectionMarks){
+      if(idx >= m.start) label = m.label;
+    }
+    return label;
+  }
+
+  // 配列をシャッフルするためのコピー（元データは変えない）
+  function shuffledChoices(item){
+    const arr = item.choices.slice();
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  let current = 0;
+  let revealed = false;
+  let answered = false;
+  let cachedChoiceOrder = null;
+
+  const qText = document.getElementById('qText');
+  const qNumber = document.getElementById('qNumber');
+  const answerBox = document.getElementById('answerBox');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const sectionTag = document.getElementById('sectionTag');
+  const typeTag = document.getElementById('typeTag');
+  const revealBtn = document.getElementById('revealBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const quizArea = document.getElementById('quizArea');
+  const doneArea = document.getElementById('doneArea');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const choiceArea = document.getElementById('choiceArea');
+  const freeArea = document.getElementById('freeArea');
+  const choiceList = document.getElementById('choiceList');
+  const resultNote = document.getElementById('resultNote');
+  const freeBtnRow = document.getElementById('freeBtnRow');
+  const choiceBtnRow = document.getElementById('choiceBtnRow');
+  const nextBtnFree = document.getElementById('nextBtnFree');
+  const nextBtnChoice = document.getElementById('nextBtnChoice');
+
+  function goNext(){
+    if(current < quizData.length - 1){
+      current++;
+      render();
+    } else {
+      quizArea.style.display = 'none';
+      doneArea.style.display = 'block';
+    }
+  }
+
+  function goPrev(){
+    if(current > 0){
+      current--;
+      render();
+    }
+  }
+
+  function render(){
+    const total = quizData.length;
+    const item = quizData[current];
+
+    qNumber.textContent = `Q${current+1}`;
+    qText.textContent = item.q;
+    sectionTag.textContent = getSectionLabel(current);
+    progressFill.style.width = `${((current+1)/total)*100}%`;
+    progressText.textContent = `${current+1} / ${total}`;
+    prevBtn.style.opacity = (current === 0) ? 0.35 : 1;
+    prevBtn.disabled = (current === 0);
+
+    revealed = false;
+    answered = false;
+
+    if(item.type === 'choice'){
+      typeTag.textContent = '4択';
+      choiceArea.style.display = 'block';
+      freeArea.style.display = 'none';
+      choiceBtnRow.style.display = 'flex';
+      freeBtnRow.style.display = 'none';
+
+      resultNote.textContent = '';
+      resultNote.className = 'result-note';
+      nextBtnChoice.disabled = true;
+
+      cachedChoiceOrder = shuffledChoices(item);
+      choiceList.innerHTML = '';
+      cachedChoiceOrder.forEach((choiceText) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = choiceText;
+        btn.addEventListener('click', () => handleChoiceClick(btn, choiceText, item));
+        choiceList.appendChild(btn);
+      });
+    } else {
+      typeTag.textContent = '記述';
+      choiceArea.style.display = 'none';
+      freeArea.style.display = 'block';
+      choiceBtnRow.style.display = 'none';
+      freeBtnRow.style.display = 'flex';
+
+      answerBox.textContent = item.a;
+      answerBox.classList.remove('show');
+      revealBtn.textContent = '答えを見る';
+    }
+  }
+
+  function handleChoiceClick(btn, choiceText, item){
+    if(answered) return; // 一度答えたら変更不可
+    answered = true;
+
+    const isCorrect = (choiceText === item.answer);
+    const allBtns = choiceList.querySelectorAll('.choice-btn');
+    allBtns.forEach(b => b.disabled = true);
+
+    if(isCorrect){
+      btn.classList.add('correct');
+      resultNote.textContent = '◯ せいかい！';
+      resultNote.className = 'result-note correct';
+    } else {
+      btn.classList.add('wrong');
+      resultNote.textContent = `✕ 残念。正解は「${item.answer}」`;
+      resultNote.className = 'result-note wrong';
+      // 正解の選択肢も光らせる
+      allBtns.forEach(b => {
+        if(b.textContent === item.answer){
+          b.classList.add('correct');
+        }
+      });
+    }
+    nextBtnChoice.disabled = false;
+  }
+
+  revealBtn.addEventListener('click', () => {
+    revealed = !revealed;
+    answerBox.classList.toggle('show', revealed);
+    revealBtn.textContent = revealed ? '答えを隠す' : '答えを見る';
+  });
+
+  nextBtnFree.addEventListener('click', goNext);
+  nextBtnChoice.addEventListener('click', goNext);
+  prevBtn.addEventListener('click', goPrev);
+
+  restartBtn.addEventListener('click', () => {
+    current = 0;
+    quizArea.style.display = 'block';
+    doneArea.style.display = 'none';
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
